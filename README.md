@@ -1,7 +1,7 @@
 # Griptape Nodes: Node Library Template
 
-Hi! Welcome to Griptape Nodes.
-This is a guide to write your own nodes and node library, in order to use in our [Griptape Nodes](https://www.griptapenodes.com/) platform.
+Hi! Welcome to Griptape Nodes. This is a guide to write your own nodes and node library, in order
+to use in our [Griptape Nodes](https://www.griptapenodes.com/) platform.
 
 ## Griptape Nodes Node Development Documentation
 
@@ -9,7 +9,9 @@ For comprehensive guidance on developing custom nodes, refer to these official r
 
 ### Getting Started Guide
 
-The [Getting Started Guide](https://docs.griptapenodes.com/en/latest/developing_nodes/getting_started/) provides:
+The
+[Getting Started Guide](https://docs.griptapenodes.com/en/latest/developing_nodes/getting_started/)
+provides:
 
 - A beginner-friendly introduction to the Griptape Nodes ecosystem
 - Guidance on choosing the right base node type (`DataNode`, `ControlNode`, `SuccessFailureNode`)
@@ -19,7 +21,9 @@ The [Getting Started Guide](https://docs.griptapenodes.com/en/latest/developing_
 
 ### Comprehensive Node Development Guide
 
-The [Comprehensive Guide](https://docs.griptapenodes.com/en/latest/developing_nodes/comprehensive_guide/) offers:
+The
+[Comprehensive Guide](https://docs.griptapenodes.com/en/latest/developing_nodes/comprehensive_guide/)
+offers:
 
 - In-depth technical reference material
 - Detailed documentation on node base classes and lifecycle callbacks
@@ -27,15 +31,18 @@ The [Comprehensive Guide](https://docs.griptapenodes.com/en/latest/developing_no
 - Comprehensive examples of parameter types and traits
 - Best practices for UI/UX and error handling
 
-These resources complement the examples in this template and provide the full context you need to build production-quality custom nodes.
+These resources complement the examples in this template and provide the full context you need to
+build production-quality custom nodes.
 
 ## Use this Template
 
 Create your own repository using this GitHub Template. Use the Template button in the top right.
 
-Once you've created your own repository from this template, you need to pull it down to your local machine, or the machine where you are running your Griptape Nodes Engine.
+Once you've created your own repository from this template, you need to pull it down to your local
+machine, or the machine where you are running your Griptape Nodes Engine.
 
-> **Hint**: It's recommended to clone this repository into your Griptape Nodes workspace directory. You can find your workspace directory by running:
+> **Hint**: It's recommended to clone this repository into your Griptape Nodes workspace directory.
+> You can find your workspace directory by running:
 >
 > ```bash
 > gtn config show workspace_directory
@@ -73,17 +80,23 @@ Next, we'll create the nodes that will live in your library.
 
 Each node is it's own python file, written in pure python code!
 
-To create nodes for your library, please take a look at our provided examples in the `example_nodes_template` library and follow the steps below.
+To create nodes for your library, please take a look at our provided examples in the
+`example_nodes_template` library and follow the steps below.
 
 **Example Nodes:**
 
-- [Age Node (DataNode)](example_nodes_template/age_node.py) - Simple data processing node with numeric input
-- [Camera Angle Picker (DataNode with Custom Widget)](example_nodes_template/camera_angle_picker.py) - Interactive 3D rotation angle picker demonstrating custom widget integration
-- [Create Introduction (ControlNode)](example_nodes_template/create_introduction.py) - Control flow node for text processing
+- [Age Node (DataNode)](example_nodes_template/age_node.py) - Simple data processing node with
+  numeric input
+- [Camera Angle Picker (DataNode with Custom Widget)](example_nodes_template/camera_angle_picker.py)
+  \- Interactive 3D rotation angle picker demonstrating custom widget integration
+- [Create Introduction (ControlNode)](example_nodes_template/create_introduction.py) - Control flow
+  node for text processing
 - [Create Name Node](example_nodes_template/create_name.py) - Basic string manipulation node
-- [OpenAI Chat (ControlNode with Dependencies)](example_nodes_template/openai_chat.py) - Advanced node with external API integration
+- [OpenAI Chat (ControlNode with Dependencies)](example_nodes_template/openai_chat.py) - Advanced
+  node with external API integration
 - [Pig Latin Converter](example_nodes_template/pig_latin.py) - Text transformation example
-- [Simple Drawing Canvas (DataNode with Canvas Widget)](example_nodes_template/simple_drawing_canvas_node.py) - Canvas-based widget for drawing and image annotation with retina scaling
+- [Simple Drawing Canvas (DataNode with Canvas Widget)](example_nodes_template/simple_drawing_canvas_node.py)
+  \- Canvas-based widget for drawing and image annotation with retina scaling
 
 ## 📝 Creating Your Nodes
 
@@ -95,14 +108,14 @@ Define a `<your-node-name>.py` file in your `<your-library-name>` directory.
 
 There are two different types of Nodes that you could choose to define.
 
-1. **ControlNode**
-   Has Parameters that allow for configuring a control flow. They create the main path of the flow upon run.
-2. **DataNode**
-   Solely has parameters that define and create data values. They can be dependencies of nodes on the main flow, but don't have control inputs/outputs.
-   _You can add ControlParameters to a DataNode if desired to give it the functionality of a ControlNode._
+1. **ControlNode** Has Parameters that allow for configuring a control flow. They create the main
+   path of the flow upon run.
+2. **DataNode** Solely has parameters that define and create data values. They can be dependencies
+   of nodes on the main flow, but don't have control inputs/outputs. _You can add ControlParameters
+   to a DataNode if desired to give it the functionality of a ControlNode._
 
-Within your `<your-node-name>.py`.
-Add this import at the top of your file and define your Node or Nodes as a class.
+Within your `<your-node-name>.py`. Add this import at the top of your file and define your Node or
+Nodes as a class.
 
 ```
 from griptape_nodes.exe_types.node_types import ControlNode, DataNode
@@ -120,35 +133,38 @@ class <YourNodeName>(DataNode):
 ### Initialize your Node and define your Parameters
 
 Parameters are fields on the node that can be connected to other nodes or set by the user.
-Parameters have many fields that can be configured for their desired behavior.
-Only a couple of the fields are mandatory. The rest are optional.
+Parameters have many fields that can be configured for their desired behavior. Only a couple of the
+fields are mandatory. The rest are optional.
 
 ### Parameter Fields
 
-1. name: `str` The name of the parameter. Must be unique to the node.
-2. tooltip: `str | list[dict]` The description that will appear upon hovering the mouse.
-3. type: `str` _OPTIONAL_ The type of the value in the parameter. If not defined, it will be whatever the python type is.
-4. input*types: `list[str]` \_OPTIONAL* The allowed list of types that can be connected as an INPUT to your parameter.
-5. output*type: `str` \_OPTIONAL* The type that the OUTPUT of your parameter will be.
-6. default*value: Any \_OPTIONAL* A default value for your parameter if it isn't set
-7. tooltip*as_input: `str | list[dict]` \_OPTIONAL* Tooltip on the input port
-8. tooltip*as_property: `str | list[dict]` \_OPTIONAL* Tooltip on the property displapy
-9. tooltip*as_output: `str | list[dict]` \_OPTIONAL* Tooltip on the output port
-10. allowed*modes: `set[ParameterMode]`
-    \_OPTIONAL* The allowed modes.
-    `ParameterMode.INPUT`: Accepts inputs
-    `ParameterMode.OUTPUT`: Sends output
-    `ParameterMode.PROPERTY`: Can be set on the node itself.
+01. name: `str` The name of the parameter. Must be unique to the node.
+02. tooltip: `str | list[dict]` The description that will appear upon hovering the mouse.
+03. type: `str` _OPTIONAL_ The type of the value in the parameter. If not defined, it will be
+    whatever the python type is.
+04. input*types: `list[str]` \_OPTIONAL* The allowed list of types that can be connected as an
+    INPUT to your parameter.
+05. output*type: `str` \_OPTIONAL* The type that the OUTPUT of your parameter will be.
+06. default*value: Any \_OPTIONAL* A default value for your parameter if it isn't set
+07. tooltip*as_input: `str | list[dict]` \_OPTIONAL* Tooltip on the input port
+08. tooltip*as_property: `str | list[dict]` \_OPTIONAL* Tooltip on the property displapy
+09. tooltip*as_output: `str | list[dict]` \_OPTIONAL* Tooltip on the output port
+10. allowed*modes: `set[ParameterMode]` \_OPTIONAL* The allowed modes. `ParameterMode.INPUT`:
+    Accepts inputs `ParameterMode.OUTPUT`: Sends output `ParameterMode.PROPERTY`: Can be set on the
+    node itself.
 11. ui*options: `dict` \_OPTIONAL* Informs the display of your node.
-12. traits: `set[type[Trait] | Trait]` _OPTIONAL_ Reusable classes that define features on a parameter, including converters and UI options. They are inheritable!
-13. converters: `list[Callable[[Any], Any]]` _OPTIONAL_ Modifies the parameter value after being set if needed.
-14. validators: `list[Callable[[Parameter, Any], None]]` _OPTIONAL_ Validates that the value on the parameter is correct.
+12. traits: `set[type[Trait] | Trait]` _OPTIONAL_ Reusable classes that define features on a
+    parameter, including converters and UI options. They are inheritable!
+13. converters: `list[Callable[[Any], Any]]` _OPTIONAL_ Modifies the parameter value after being
+    set if needed.
+14. validators: `list[Callable[[Parameter, Any], None]]` _OPTIONAL_ Validates that the value on the
+    parameter is correct.
 
 ### Define Node Method
 
-Nodes have one absolute method that _absolutely_ (haha) must be defined.
-This is the method that is called by the node at runtime when a node executes.
-It completes the function of your node, whether thats creating a string, generating an image, or creating an agent.
+Nodes have one absolute method that _absolutely_ (haha) must be defined. This is the method that is
+called by the node at runtime when a node executes. It completes the function of your node, whether
+thats creating a string, generating an image, or creating an agent.
 
 ```
 def process(self) -> None:
@@ -157,7 +173,8 @@ def process(self) -> None:
 
 ### Additional Optional Methods
 
-Nodes have additional methods that can provide functionality at or before runtime (and you can define as many helper functions as you'd like.)
+Nodes have additional methods that can provide functionality at or before runtime (and you can
+define as many helper functions as you'd like.)
 
 1. Validate Node
 
@@ -218,8 +235,8 @@ def after_value_set(self, parameter: Parameter, value: Any) -> None:
         """
 ```
 
-4. Checking if a connections to the node are allowed.
-   The default value is true, but Custom nodes can implement this method however they'd like to control connections.
+4. Checking if a connections to the node are allowed. The default value is true, but Custom nodes
+   can implement this method however they'd like to control connections.
 
 ```
 def allow_incoming_connection(
@@ -293,7 +310,8 @@ def after_outgoing_connection_removed(
 
 ## 🎨 Custom Widget Components
 
-Custom widgets allow you to create interactive UI components that go beyond standard input fields. Widgets are JavaScript modules that render custom interfaces in the Foundry Griptape editor.
+Custom widgets allow you to create interactive UI components that go beyond standard input fields.
+Widgets are JavaScript modules that render custom interfaces in the Foundry Griptape editor.
 
 ### When to Use Custom Widgets
 
@@ -392,14 +410,16 @@ class MyNode(DataNode):
 
 ### Widget Best Practices
 
-**Event Isolation**: Prevent canvas drag interference by using `nodrag` and `nowheel` classes and `stopPropagation()`:
+**Event Isolation**: Prevent canvas drag interference by using `nodrag` and `nowheel` classes and
+`stopPropagation()`:
 
 ```javascript
 element.className = 'nodrag nowheel';
 element.addEventListener('pointerdown', (e) => e.stopPropagation());
 ```
 
-**State Management**: Always clone objects before passing to `onChange` to prevent shared references:
+**State Management**: Always clone objects before passing to `onChange` to prevent shared
+references:
 
 ```javascript
 // ✅ Good - clone the object
@@ -436,18 +456,25 @@ export default function MyWidget(container, props) {
 
 This template includes two complete widget examples:
 
-- **[AnglePicker](example_nodes_template/widgets/AnglePicker.js)**: 3D rotation angle selector with interactive visualization
-- **[SimpleDrawingCanvas](example_nodes_template/widgets/SimpleDrawingCanvas.js)**: Canvas-based drawing tool with image annotation, retina scaling, and proper coordinate handling
+- **[AnglePicker](example_nodes_template/widgets/AnglePicker.js)**: 3D rotation angle selector with
+  interactive visualization
+- **[SimpleDrawingCanvas](example_nodes_template/widgets/SimpleDrawingCanvas.js)**: Canvas-based
+  drawing tool with image annotation, retina scaling, and proper coordinate handling
 
 ### Further Reading
 
-For comprehensive guidance on custom widgets, including advanced patterns and integration techniques, see the [Custom Widget Components Guide](https://docs.griptapenodes.com/en/latest/developing_nodes/comprehensive_guide/#custom-widget-components) in the official documentation.
+For comprehensive guidance on custom widgets, including advanced patterns and integration
+techniques, see the
+[Custom Widget Components Guide](https://docs.griptapenodes.com/en/latest/developing_nodes/comprehensive_guide/#custom-widget-components)
+in the official documentation.
 
 ## 📋 Library Configuration
 
 ### Update your library JSON file
 
-A `griptape-nodes-library.json` file already exists at the root of this repository. This configuration file defines your library metadata, dependencies, and nodes. It will be loaded by the Griptape Nodes engine at runtime.
+A `griptape-nodes-library.json` file already exists at the root of this repository. This
+configuration file defines your library metadata, dependencies, and nodes. It will be loaded by the
+Griptape Nodes engine at runtime.
 
 ```
 {
@@ -511,15 +538,18 @@ A `griptape-nodes-library.json` file already exists at the root of this reposito
 
 #### Dependencies
 
-Add Python packages your nodes require in the `dependencies.pip_dependencies` array. The engine will automatically install these when loading your library.
+Add Python packages your nodes require in the `dependencies.pip_dependencies` array. The engine
+will automatically install these when loading your library.
 
 #### Secrets Management
 
-Use the `settings.secrets_to_register` array to automatically register API keys and secrets your nodes need. Users will be prompted to configure these in the Griptape Nodes settings.
+Use the `settings.secrets_to_register` array to automatically register API keys and secrets your
+nodes need. Users will be prompted to configure these in the Griptape Nodes settings.
 
 #### Categories
 
-Organize your nodes into logical categories with custom colors and icons. Use descriptive category IDs like `"image/processing"` or `"data/conversion"`.
+Organize your nodes into logical categories with custom colors and icons. Use descriptive category
+IDs like `"image/processing"` or `"data/conversion"`.
 
 ## 🛠️ Best Practices
 
@@ -755,12 +785,14 @@ images = self.get_parameter_list_value("images")  # Always returns list
 
    - Open the Settings menu and navigate to the _Libraries_ settings
    - Click on _+ Add Library_ at the bottom of the settings panel
-   - Enter the path to the library JSON file: **your Griptape Nodes Workspace directory**`/your-library-name/griptape-nodes-library.json`
+   - Enter the path to the library JSON file: **your Griptape Nodes Workspace
+     directory**`/your-library-name/griptape-nodes-library.json`
    - You can check your workspace directory with `gtn config show workspace_directory`
    - Close the Settings Panel
    - Click on _Refresh Libraries_
 
-3. **Verify installation** by checking that your custom nodes appear in the Griptape Nodes interface in your defined category.
+3. **Verify installation** by checking that your custom nodes appear in the Griptape Nodes
+   interface in your defined category.
 
 ## 🎯 Example Usage
 
@@ -809,8 +841,9 @@ images = self.get_parameter_list_value("images")  # Always returns list
 
 ## 📄 License
 
-This template is provided under the Apache License 2.0. Your custom library can use any license you choose.
+This template is provided under the Apache License 2.0. Your custom library can use any license you
+choose.
 
----
+______________________________________________________________________
 
 Happy building! 🚀

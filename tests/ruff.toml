@@ -1,0 +1,30 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
+extend = "../pyproject.toml"
+
+[lint]
+ignore = [
+    # Allow `assert` for pytest.
+    "S101",
+    # Allow test cases without a docstring (D103 = functions, D102 = methods).
+    "D102",
+    "D103",
+    # Allow skipping return type annotation for test cases.
+    "ANN201",
+    # Allow unused function arguments (e.g. fixtures used for
+    # side-effects only).
+    "ARG001",
+    # Allow magic values in comparisons (common in test assertions).
+    "PLR2004",
+    # Allow pathlib in async test functions. ASYNC240 warns against
+    # using blocking pathlib methods inside async functions, since
+    # they could stall the event loop.
+    "ASYNC240",
+    # Allow importing private names — unit tests commonly exercise
+    # internal implementation details.
+    "PLC2701",
+    # Allow test methods that don't use self — pytest class methods
+    # conventionally have self even when not accessing it.
+    "PLR6301",
+]

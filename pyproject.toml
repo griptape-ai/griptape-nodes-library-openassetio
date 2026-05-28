@@ -1,3 +1,6 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
 [project]
 name = "example_nodes_template"
 version = "0.1.0"
@@ -15,33 +18,178 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = ["pyright>=1.1.396", "pytest-asyncio>=0.21.0", "ruff>=0.8.0", "pytest"]
+dev = [
+    "pyright>=1.1.396",
+    "pytest-asyncio>=0.21.0",
+    "pytest",
+    # Linting / formatting.
+    "ruff~=0.15.10",
+    "pre-commit~=3.8.0",
+    "slipcover~=1.0.18",
+    "docstrfmt~=2.0.2",
+    "pydoclint~=0.8.3",
+    # Markdown formatter and its plugins.
+    "mdformat~=1.0.0",
+    "mdformat-gfm~=1.0.0",
+    "mdformat-frontmatter~=2.0.10",
+    "mdformat-pyproject~=0.1.1",
+]
 
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+extend-exclude = []
 
+# Python linter rules.
 [tool.ruff.lint]
+# Enable additional rules
+preview = true
 select = [
-  "E",  # pycodestyle errors
-  "W",  # pycodestyle warnings
-  "F",  # Pyflakes
-  "I",  # isort
-  "B",  # flake8-bugbear
-  "C4", # flake8-comprehensions
-  "UP", # pyupgrade
+    # See all rules here: https://docs.astral.sh/ruff/rules
+    # Pyflakes (e.g. syntax errors, undefined names).
+    "F",
+    # pydocstyle
+    "D",
+    # pycodestyle
+    "E", "W",
+    # pylint
+    "PL",
+    # Import sorting
+    "I",
+    # flake8-2020
+    "YTT",
+    # flake8-annotations
+    "ANN",
+    # flake8-async
+    "ASYNC",
+    # flake8-bandit
+    "S",
+    # eradicate
+    "ERA",
+    # flake8-blind-except
+    "BLE",
+    # flake8-bugbear
+    "B",
+    # flake8-builtins
+    "A",
+    # flake8-comprehensions
+    "C4",
+    # flake8-copyright
+    "CPY",
+    # flake8-datetimez
+    "DTZ",
+    # flake8-debugger
+    "T10",
+    # flake8-errmsg
+    "EM",
+    # flake8-executable
+    "EXE",
+    # flake8-fixme
+    "FIX",
+    # flake8-future-annotations
+    "FA",
+    # flake8-gettext
+    "INT",
+    # flake8-implicit-str-concat
+    "ISC",
+    # flake8-import-conventions
+    "ICN",
+    # flake8-logging
+    "LOG",
+    # flake8-logging-format
+    "G",
+    # flake8-no-pep420
+    "INP",
+    # flake8-pie
+    "PIE",
+    # flake8-print
+    "T20",
+    # flake8-pyi
+    "PYI",
+    # flake8-pytest-style
+    "PT",
+    # flake8-quotes
+    "Q",
+    # flake8-raise
+    "RSE",
+    # flake8-return
+    "RET",
+    # flake8-self
+    "SLF",
+    # flake8-simplify
+    "SIM",
+    # flake8-slots
+    "SLOT",
+    # flake8-tidy-imports
+    "TID",
+    # flake8-todos
+    "TD",
+    # flake8-type-checking
+    "TC",
+    # flake8-unused-arguments
+    "ARG",
+    # flake8-use-pathlib
+    "PTH",
+    # flynt
+    "FLY",
+    # mccabe
+    "C90",
+    # pep8-naming
+    "N",
+    # Perflint
+    "PERF",
+    # pydoclint
+    "DOC",
+    # pygrep-hooks
+    "PGH",
+    # pyupgrade
+    "UP",
+    # refurb
+    "FURB",
+    # Ruff-specific rules
+    "RUF",
+    # tryceratops
+    "TRY",
 ]
 ignore = [
-  "E501", # line too long (handled by formatter)
-  "B008", # do not perform function calls in argument defaults
+    # pydoclint DOC rules — disabled in ruff because ruff's DOC checker does
+    # not support the Sphinx docstring convention. The standalone pydoclint
+    # pre-commit hook (style=sphinx) handles these checks instead.
+    "DOC",
+    # Allow TODO comments during early development.
+    "FIX002",
+    # Don't require issue links on TODO comments during early development.
+    "TD003",
+    # Allow commented-out code blocks used as future implementation
+    # examples during early development.
+    "ERA001",
+    # Conflicts with pydoclint's should-document-star-arguments = false.
+    # pydoclint owns this check; ruff D417 would require documenting **kwargs
+    # in every __init__, which pydoclint then rejects.
+    "D417",
+    # Conflicts with D211 (no blank line before class docstring).
+    "D203",
+    # Incompatible with D212 (summary on first line).
+    "D213",
+    # Conflicts with Sphinx RST field lists: when a :param: description spans
+    # multiple lines ruff incorrectly demands a blank separator line.
+    "D205",
 ]
 
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"  # Lax convention - docstrings mostly covered by other linters.
+
+# Python formatter config.
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
+
+# Python type checking static analysis tool.
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
@@ -49,3 +197,39 @@ include = ["."]
 exclude = [".venv", "**/node_modules", "**/__pycache__", "**/.*", "templates"]
 pythonVersion = "3.12"
 reportIncompatibleMethodOverride = false
+# OpenAssetIO makes extensive use of import hoists for single-class
+# modules and classes defined in CPython (i.e. C++ bindings) e.g.
+# `from openassetio import Context`
+# vs. the "real" location of the C++-bound class
+# `from openassetio._openassetio import Context`
+reportPrivateImportUsage = false
+
+# Formatter for markdown documents.
+[tool.mdformat]
+wrap = 99
+number = true
+
+# Linter for docstrings, e.g. that all arguments are documented.
+[tool.pydoclint]
+# For docstrfmt to work we must use Sphinx-style docstrings. ruff's implementation of
+# pydoclint does not yet support Sphinx-style docstrings. In addition, ruff's pydoclint
+# does not check that function arguments are documented. So we disable ruff's DOC rules
+# and use this standalone pydoclint configuration instead.
+style = "sphinx"
+arg-type-hints-in-docstring = false
+arg-type-hints-in-signature = true
+check-return-types = false
+require-return-section-when-returning-nothing = false
+skip-checking-short-docstrings = false
+skip-checking-raises = true
+should-document-star-arguments = false
+check-class-attributes = false
+allow-init-docstring = true
+quiet = true
+exclude = '\.git|\.venv|__pycache__|^tests/'
+
+# Formatter for docstrings, including re-wrapping short/long lines.
+[tool.docstrfmt]
+line_length = 88
+extend_exclude = []
+docstring_trailing_line = false

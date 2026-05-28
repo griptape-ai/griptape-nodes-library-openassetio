@@ -1,0 +1,17 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
+[general]
+contrib = contrib-title-conventional-commits
+
+# Setting contrib rule options is identical to configuring other rules
+[contrib-title-conventional-commits]
+types = fix,feat,refactor,deps,chore,docs,ci
+
+[title-max-length]
+# Same as the default (at time of writing), but explicitly set here for clarity.
+line-length = 72
+
+[body-max-line-length]
+# Same as the default (at time of writing), but explicitly set here for clarity.
+line-length = 80

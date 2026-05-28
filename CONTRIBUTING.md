@@ -2,7 +2,8 @@
 
 ## Development Setup
 
-This project uses [uv](https://docs.astral.sh/uv/) for dependency management. Install dev dependencies with:
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management. Install dev
+dependencies with:
 
 ```bash
 make install/dev
@@ -45,7 +46,8 @@ make fix
 
 ### Dependency Sync
 
-The `pip_dependencies` field in the library JSON is kept in sync with `pyproject.toml`. Run this after adding or removing dependencies:
+The `pip_dependencies` field in the library JSON is kept in sync with `pyproject.toml`. Run this
+after adding or removing dependencies:
 
 ```bash
 make deps/sync
@@ -55,11 +57,13 @@ This is also run automatically as part of `make install/core` and `make install/
 
 ## CI
 
-The CI workflow runs `make check` on every pull request and push to `main`. PRs must pass all checks before merging.
+The CI workflow runs `make check` on every pull request and push to `main`. PRs must pass all
+checks before merging.
 
 ## Releases
 
-Library versions follow [semantic versioning](https://semver.org/). The version is stored in the library JSON file under `metadata.library_version`.
+Library versions follow [semantic versioning](https://semver.org/). The version is stored in the
+library JSON file under `metadata.library_version`.
 
 To check the current version:
 
@@ -77,7 +81,8 @@ make version/set v=1.2.3
 
 1. Merge your changes to `main`.
 
-2. Run **Actions > Version Bump (Patch)** or **Actions > Version Bump (Minor)** on `main`. This increments the version in the library JSON and commits the change.
+2. Run **Actions > Version Bump (Patch)** or **Actions > Version Bump (Minor)** on `main`. This
+   increments the version in the library JSON and commits the change.
 
    Or bump locally and push:
 
@@ -87,7 +92,9 @@ make version/set v=1.2.3
    make version/major   # 1.2.3 → 2.0.0
    ```
 
-3. Run **Actions > Version Publish** on `main`. This creates and pushes the version tag (e.g. `v1.2.3`), updates the `stable` tag, and creates a GitHub release with auto-generated release notes.
+3. Run **Actions > Version Publish** on `main`. This creates and pushes the version tag (e.g.
+   `v1.2.3`), updates the `stable` tag, and creates a GitHub release with auto-generated release
+   notes.
 
 ### Patch Release
 

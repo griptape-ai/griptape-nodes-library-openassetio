@@ -1,3 +1,6 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
 SHELL := /bin/bash
 
 LIBRARY_JSON := griptape-nodes-library.json
@@ -82,29 +85,51 @@ install/all: deps/sync ## Install all dependencies.
 install/dev: ## Install dev dependencies.
 	@uv sync --group dev
 
+.PHONY: install/hooks
+install/hooks: ## Install pre-commit hooks.
+	@uv run pre-commit install
+
 .PHONY: lint
 lint: ## Lint project.
 	@uv run ruff check --fix
+	@uv run pydoclint .
 
 .PHONY: format
 format: ## Format project.
 	@uv run ruff format
+	@uv run docstrfmt .
+	@uv run mdformat *.md griptape_nodes_library_openassetio/ tests/ .github/
 
 .PHONY: fix
 fix: ## Fix project.
 	@make format
 	@uv run ruff check --fix --unsafe-fixes
 
+.PHONY: test
+test: ## Run tests.
+	@uv run pytest tests/
+
+.PHONY: test/coverage
+test/coverage: ## Run tests with branch coverage.
+	@uv run slipcover --branch --source griptape_nodes_library_openassetio --fail-under 90 -m pytest
+
 .PHONY: check
 check: check/format check/lint check/types check/json ## Run all checks.
+
+.PHONY: pre-commit
+pre-commit: ## Run pre-commit hooks on all files.
+	@uv run pre-commit run --all-files
 
 .PHONY: check/format
 check/format:
 	@uv run ruff format --check
+	@uv run docstrfmt --check .
+	@uv run mdformat --check *.md griptape_nodes_library_openassetio/ tests/ .github/
 
 .PHONY: check/lint
 check/lint:
 	@uv run ruff check .
+	@uv run pydoclint .
 
 .PHONY: check/types
 check/types:

@@ -1,3 +1,6 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -200,6 +203,9 @@ cython_debug/
 #   and can be added to the global gitignore or merged into this file. However, if you prefer,
 #   you could uncomment the following to ignore the entire vscode folder
 # .vscode/
+
+# Agent instructions (local only, not tracked)
+AGENTS.md
 
 # Ruff stuff:
 .ruff_cache/

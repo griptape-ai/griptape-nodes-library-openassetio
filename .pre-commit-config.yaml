@@ -1,0 +1,48 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
+default_install_hook_types: [pre-commit, commit-msg]
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.10
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+        args: [--check, --diff]
+
+  - repo: https://github.com/hukkin/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        args: [--check]
+        additional_dependencies:
+          - mdformat_frontmatter~=2.0.10
+          - mdformat-gfm~=1.0.0
+          - mdformat_pyproject~=0.1.1
+
+  - repo: https://github.com/LilSpazJoekp/docstrfmt
+    rev: v2.0.2
+    hooks:
+      - id: docstrfmt
+        args: [--check]
+        # click 8.4.0 changed how context.params is used when dispatching to
+        # the command function. docstrfmt 2.0.2's _parse_sources callback pops
+        # line_length from context.params, which click 8.4.0 then fails to
+        # pass to main(), causing "missing 1 required positional argument".
+        additional_dependencies:
+          - "click<8.4"
+
+  - repo: https://github.com/jsh9/pydoclint
+    rev: 0.8.3
+    hooks:
+      - id: pydoclint
+
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.396
+    hooks:
+      - id: pyright
+
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.19.1
+    hooks:
+      - id: gitlint
