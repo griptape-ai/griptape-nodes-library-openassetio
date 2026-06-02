@@ -2,16 +2,16 @@
 # Copyright (c) 2026 The Foundry Visionmongers Ltd
 # SPDX-License-Identifier: Apache-2.0
 [project]
-name = "example_nodes_template"
+name = "griptape-nodes-library-openassetio"
 version = "0.1.0"
-description = "Template for Users to create Custom Libraries and Nodes"
-authors = [{ name = "Your Name", email = "you@example.com" }]
+description = "Griptape Nodes library for OpenAssetIO asset management integration"
+authors = [{ name = "The Foundry Visionmongers Ltd" }]
 readme = "README.md"
 requires-python = "~=3.12.0"
-dependencies = ["griptape-nodes"]
+dependencies = ["griptape-nodes-engine", "openassetio~=1.0.0"]
 
 [tool.uv.sources]
-griptape-nodes = { git = "https://github.com/griptape-ai/griptape-nodes", rev = "latest" }
+griptape-nodes-engine = { git = "https://github.com/griptape-ai/griptape-nodes-engine", rev = "latest" }
 
 [build-system]
 requires = ["hatchling"]
@@ -28,11 +28,14 @@ dev = [
     "slipcover~=1.0.18",
     "docstrfmt~=2.0.2",
     "pydoclint~=0.8.3",
+    "click<8.4",  # breaking change causes pydoclint error.
     # Markdown formatter and its plugins.
     "mdformat~=1.0.0",
     "mdformat-gfm~=1.0.0",
     "mdformat-frontmatter~=2.0.10",
     "mdformat-pyproject~=0.1.1",
+    # Basic Asset Library fake asset manager for integration testing.
+    "openassetio-manager-bal~=1.0.0b1.post1",
 ]
 
 [tool.ruff]

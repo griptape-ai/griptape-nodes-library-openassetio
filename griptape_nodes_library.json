@@ -1,0 +1,41 @@
+{
+    "name": "OpenAssetIO",
+    "library_schema_version": "0.5.0",
+    "metadata": {
+        "author": "The Foundry Visionmongers Ltd",
+        "description": "Griptape Nodes library for OpenAssetIO asset management integration",
+        "library_version": "0.1.0",
+        "engine_version": "0.85.3",
+        "tags": [
+            "OpenAssetIO",
+            "Asset Management",
+            "Pipeline"
+        ],
+        "dependencies": {
+            "pip_dependencies": [
+                "openassetio~=1.0.0"
+            ]
+        }
+    },
+    "categories": [
+        {
+            "OpenAssetIO": {
+                "color": "border-blue-500",
+                "title": "OpenAssetIO",
+                "description": "Nodes for interacting with OpenAssetIO asset managers",
+                "icon": "Database"
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "class_name": "OpenAssetIOSession",
+            "file_path": "griptape_nodes_library_openassetio/session_node.py",
+            "metadata": {
+                "category": "OpenAssetIO",
+                "description": "Initialise an OpenAssetIO session and connect to the configured asset manager",
+                "display_name": "OpenAssetIO Session"
+            }
+        }
+    ]
+}
