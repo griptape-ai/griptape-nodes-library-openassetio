@@ -1,0 +1,30 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
+name: Version Bump (Minor)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump minor version
+        run: make version/minor
+
+      - name: Push changes
+        run: git push
