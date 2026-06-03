@@ -36,6 +36,15 @@
                 "description": "Initialise an OpenAssetIO session and connect to the configured asset manager",
                 "display_name": "OpenAssetIO Session"
             }
+        },
+        {
+            "class_name": "IsEntityReference",
+            "file_path": "griptape_nodes_library_openassetio/is_entity_reference_node.py",
+            "metadata": {
+                "category": "OpenAssetIO",
+                "description": "Test whether a string is a valid entity reference for the connected manager",
+                "display_name": "Is Entity Reference"
+            }
         }
     ]
 }
