@@ -599,7 +599,10 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "griptape-nodes-engine" },
+    { name = "jsonschema" },
     { name = "openassetio" },
+    { name = "openassetio-mediacreation" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -623,7 +626,10 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "griptape-nodes-engine", git = "https://github.com/griptape-ai/griptape-nodes-engine?rev=latest" },
+    { name = "jsonschema", specifier = "~=4.26.0" },
     { name = "openassetio", specifier = "~=1.0.0" },
+    { name = "openassetio-mediacreation", specifier = ">=1.0.0a12" },
+    { name = "pyyaml", specifier = "~=6.0.3" },
 ]
 
 [package.metadata.requires-dev]

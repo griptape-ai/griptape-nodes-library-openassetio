@@ -13,7 +13,10 @@
     ],
     "dependencies": {
       "pip_dependencies": [
-        "openassetio~=1.0.0"
+        "openassetio~=1.0.0",
+        "openassetio-mediacreation>=1.0.0a12",
+        "jsonschema~=4.26.0",
+        "PyYAML~=6.0.3"
       ]
     }
   },
@@ -27,6 +30,7 @@
       }
     }
   ],
+  "advanced_library_path": "griptape_nodes_library_openassetio/library_hooks.py",
   "nodes": [
     {
       "class_name": "OpenAssetIOSession",
