@@ -13,7 +13,9 @@
         ],
         "dependencies": {
             "pip_dependencies": [
-                "openassetio~=1.0.0"
+                "openassetio~=1.0.0",
+                "openassetio-mediacreation>=1.0.0a12",
+                "pyyaml>=6.0"
             ]
         }
     },
@@ -45,6 +47,15 @@
                 "category": "OpenAssetIO",
                 "description": "Test whether a string is a valid entity reference for the connected manager",
                 "display_name": "Is Entity Reference"
+            }
+        },
+        {
+            "class_name": "ResolveEntity",
+            "file_path": "griptape_nodes_library_openassetio/resolve_entity_node.py",
+            "metadata": {
+                "category": "OpenAssetIO",
+                "description": "Resolve an entity reference and output trait property values",
+                "display_name": "Resolve Entity"
             }
         }
     ]
