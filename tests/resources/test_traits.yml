@@ -1,0 +1,149 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
+#
+# Minimal traits YAML for testing the trait catalogue.
+package: test-traits
+description: Test trait definitions
+traits:
+  content:
+    description: Test content traits
+    members:
+      LocatableContent:
+        versions:
+          "1":
+            description: Test locatable content
+            usage:
+              - entity
+            properties:
+              location:
+                type: string
+                description: The location
+              mimeType:
+                type: string
+                description: The MIME type
+  identity:
+    description: Test identity traits
+    members:
+      DisplayName:
+        versions:
+          "1":
+            description: Test display name
+            usage:
+              - entity
+            properties:
+              name:
+                type: string
+                description: The name
+      NoProps:
+        versions:
+          "1":
+            description: Trait with no properties
+            usage:
+              - entity
+  usage:
+    description: Usage traits
+    members:
+      Entity:
+        versions:
+          "1":
+            description: Usage trait (no properties)
+            usage:
+              - entity
+  managementPolicy:
+    description: Test management policy traits
+    members:
+      Managed:
+        versions:
+          "1":
+            description: A management policy trait (not entity usage)
+            usage:
+              - managementPolicy
+            properties:
+              exclusive:
+                type: boolean
+                description: Whether the manager exclusively manages the entity
+  versioned:
+    description: Test versioned traits
+    members:
+      Multi:
+        versions:
+          "1":
+            description: Version 1 trait
+            usage:
+              - entity
+            properties:
+              alpha:
+                type: integer
+                description: An integer property
+          "2":
+            description: Version 2 trait
+            usage:
+              - entity
+            properties:
+              alpha:
+                type: integer
+                description: An integer property
+              beta:
+                type: float
+                description: A float property
+specifications:
+  content:
+    description: Test content specifications
+    members:
+      NamedContent:
+        versions:
+          "1":
+            description: Content with a display name
+            usage:
+              - entity
+            traitSet:
+              - namespace: usage
+                name: Entity
+                version: "1"
+              - namespace: content
+                name: LocatableContent
+                version: "1"
+              - namespace: identity
+                name: DisplayName
+                version: "1"
+      PropslessSpec:
+        versions:
+          "1":
+            description: Spec whose traits all lack properties
+            usage:
+              - entity
+            traitSet:
+              - namespace: usage
+                name: Entity
+                version: "1"
+              - namespace: identity
+                name: NoProps
+                version: "1"
+      CrossPackageSpec:
+        versions:
+          "1":
+            description: Spec mixing local and external traits
+            usage:
+              - entity
+            traitSet:
+              - namespace: content
+                name: LocatableContent
+                version: "1"
+              - package: external-pkg
+                namespace: ext
+                name: SomeTrait
+                version: "1"
+  lifecycle:
+    description: Test lifecycle specifications
+    members:
+      VersionsRelationship:
+        versions:
+          "1":
+            description: A relationship specification (not entity usage)
+            usage:
+              - relationship
+            traitSet:
+              - namespace: content
+                name: LocatableContent
+                version: "1"

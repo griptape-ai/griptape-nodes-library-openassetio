@@ -27,6 +27,7 @@
             }
         }
     ],
+    "advanced_library_path": "griptape_nodes_library_openassetio/library_hooks.py",
     "nodes": [
         {
             "class_name": "OpenAssetIOSession",
