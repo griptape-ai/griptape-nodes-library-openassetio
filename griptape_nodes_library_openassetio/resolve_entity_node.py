@@ -127,7 +127,7 @@ class ResolveEntity(SuccessFailureNode):
         """
         if parameter.name == "trait_ids":
             self._rebuild_dynamic_outputs(value if isinstance(value, list) else [])
-        return super().after_value_set(parameter, value)
+        super().after_value_set(parameter, value)
 
     def process(self) -> None:
         """Resolve the entity reference and populate output parameters."""
