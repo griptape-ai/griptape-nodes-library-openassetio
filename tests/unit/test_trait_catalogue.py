@@ -280,94 +280,6 @@ class TestBuildCatalogueValidationWarnings:
         assert "OrphanSpec" in caplog.text
         assert "versions" in caplog.text.lower()
 
-    def test_traits_section_non_dict_skipped_with_warning(self, caplog: pytest.LogCaptureFixture) -> None:
-        """A 'traits' value that is not a dict should be skipped with a warning."""
-        yaml_data = {
-            "package": "pkg",
-            "traits": ["not", "a", "dict"],
-            "specifications": {},
-        }
-
-        with caplog.at_level(logging.WARNING):
-            cat = build_catalogue_from_yaml_list([yaml_data])
-
-        assert cat.resolvable_trait_ids() == []
-        assert "not a mapping" in caplog.text.lower()
-
-    def test_specifications_section_non_dict_skipped_with_warning(self, caplog: pytest.LogCaptureFixture) -> None:
-        """A 'specifications' value that is not a dict should be skipped with a warning."""
-        yaml_data = _make_minimal_yaml("pkg", "ns", "T", "string")
-        yaml_data["specifications"] = "not a dict"
-
-        with caplog.at_level(logging.WARNING):
-            cat = build_catalogue_from_yaml_list([yaml_data])
-
-        # Traits should still be parsed.
-        assert cat.get_trait("pkg:ns.T") is not None
-        assert "not a mapping" in caplog.text.lower()
-
-    def test_malformed_trait_set_entry_skipped_with_warning(self, caplog: pytest.LogCaptureFixture) -> None:
-        """A traitSet entry missing required keys is skipped with a warning."""
-        yaml_data = _make_minimal_yaml("pkg", "ns", "T", "string")
-        yaml_data["specifications"] = {
-            "ns": {
-                "description": "ns",
-                "members": {
-                    "BadSpec": {
-                        "versions": {
-                            "1": {
-                                "description": "spec",
-                                "usage": ["entity"],
-                                "traitSet": [
-                                    {"namespace": "ns", "name": "T", "version": "1"},
-                                    {"bad": "entry"},
-                                ],
-                            },
-                        },
-                    },
-                },
-            },
-        }
-
-        with caplog.at_level(logging.WARNING):
-            cat = build_catalogue_from_yaml_list([yaml_data])
-
-        spec = cat.get_specification("pkg:specification:ns.BadSpec")
-        assert spec is not None
-        # The valid trait ref should still be included.
-        assert "pkg:ns.T" in spec.trait_ids
-        # The malformed entry should have been skipped.
-        assert len(spec.trait_ids) == 1
-        assert "traitSet" in caplog.text
-
-    def test_non_dict_trait_set_entry_skipped_with_warning(self, caplog: pytest.LogCaptureFixture) -> None:
-        """A traitSet entry that is a string instead of a dict is skipped."""
-        yaml_data = _make_minimal_yaml("pkg", "ns", "T", "string")
-        yaml_data["specifications"] = {
-            "ns": {
-                "description": "ns",
-                "members": {
-                    "StrSpec": {
-                        "versions": {
-                            "1": {
-                                "description": "spec",
-                                "usage": ["entity"],
-                                "traitSet": ["just_a_string"],
-                            },
-                        },
-                    },
-                },
-            },
-        }
-
-        with caplog.at_level(logging.WARNING):
-            cat = build_catalogue_from_yaml_list([yaml_data])
-
-        spec = cat.get_specification("pkg:specification:ns.StrSpec")
-        assert spec is not None
-        assert spec.trait_ids == []
-        assert "traitSet" in caplog.text
-
 
 class TestSpecifications:
     """Tests for specification parsing and lookup."""
@@ -708,6 +620,57 @@ class TestLoadEnvVarYamls:
 
         assert result == []
         assert "not a YAML mapping" in caplog.text
+
+    def test_skips_yaml_failing_schema_validation(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A YAML file that is a valid mapping but fails schema validation is skipped."""
+        # "traits" must be an object, not a list.
+        bad_file = tmp_path / "bad_schema.yml"
+        bad_file.write_text(yaml.dump({"package": "bad", "traits": ["not", "an", "object"]}))
+
+        monkeypatch.setenv("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS", str(bad_file))
+
+        with caplog.at_level(logging.WARNING):
+            result = catalogue_mod._load_env_var_yamls()  # noqa: SLF001
+
+        assert result == []
+        assert "failed schema validation" in caplog.text.lower()
+
+    def test_skips_yaml_with_integer_version_key(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A YAML file with unquoted integer version keys fails schema validation."""
+        # PyYAML parses unquoted `1:` as int(1). The schema requires string
+        # version keys matching "^[1-9][0-9]*$", so int keys fail.
+        bad_file = tmp_path / "int_version.yml"
+        bad_file.write_text(
+            yaml.dump(
+                {
+                    "package": "bad",
+                    "traits": {
+                        "ns": {
+                            "description": "ns",
+                            "members": {
+                                "Thing": {
+                                    "versions": {
+                                        1: {"description": "v1"},
+                                    },
+                                },
+                            },
+                        },
+                    },
+                }
+            )
+        )
+
+        monkeypatch.setenv("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS", str(bad_file))
+
+        with caplog.at_level(logging.WARNING):
+            result = catalogue_mod._load_env_var_yamls()  # noqa: SLF001
+
+        assert result == []
+        assert "failed schema validation" in caplog.text.lower()
 
 
 def _make_minimal_yaml(

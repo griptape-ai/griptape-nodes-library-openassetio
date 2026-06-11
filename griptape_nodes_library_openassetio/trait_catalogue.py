@@ -7,16 +7,24 @@ from __future__ import annotations
 
 import dataclasses
 import importlib.resources
+import json
 import logging
 import os
 from pathlib import Path
 from typing import Any
 
+import jsonschema
 import yaml
 
 _ENV_VAR = "OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS"
 
 _log = logging.getLogger(__name__)
+
+# JSON Schema for validating user-supplied trait definition YAML files.
+# Sourced from the OpenAssetIO-TraitGen project.
+_TRAIT_SCHEMA: dict[str, Any] = json.loads(
+    (importlib.resources.files(__package__) / "trait_schema.json").read_text(encoding="utf-8")
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -248,15 +256,6 @@ def build_catalogue_from_yaml_list(yaml_list: list[dict[str, Any]]) -> TraitCata
         traits_section = yaml_data.get("traits", {})
         specs_section = yaml_data.get("specifications", {})
 
-        # Validate that traits/specifications are dicts. User-supplied YAML
-        # may provide these as a list, string, etc.
-        if traits_section and not isinstance(traits_section, dict):
-            _log.warning("Package '%s': 'traits' is not a mapping, skipping traits", package)
-            traits_section = {}
-        if specs_section and not isinstance(specs_section, dict):
-            _log.warning("Package '%s': 'specifications' is not a mapping, skipping specifications", package)
-            specs_section = {}
-
         if not traits_section and not specs_section:
             _log.warning("Package '%s' has no traits and no specifications", package)
             continue
@@ -315,6 +314,26 @@ def _load_env_var_yamls() -> list[dict[str, Any]]:
         # types (e.g. a list) for valid-but-unexpected YAML.
         if not isinstance(yaml_data, dict):
             _log.warning("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS: %s is not a YAML mapping, skipping", path)
+            continue
+        try:
+            jsonschema.validate(yaml_data, _TRAIT_SCHEMA)
+        except jsonschema.ValidationError as exc:
+            _log.warning(
+                "OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS: %s failed schema validation: %s (path: %s)",
+                path,
+                exc.message,
+                list(exc.absolute_path),
+            )
+            continue
+        except TypeError as exc:
+            # PyYAML parses unquoted integer keys (e.g. `1:`) as int, but
+            # the schema expects string keys. jsonschema raises TypeError
+            # when it tries to regex-match a patternProperty against an int.
+            _log.warning(
+                "OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS: %s failed schema validation: %s",
+                path,
+                exc,
+            )
             continue
         yaml_list.append(yaml_data)
 
@@ -408,8 +427,17 @@ def _build_specifications(package: str, specs_section: dict[str, Any]) -> dict[s
 
                 # Each traitSet entry is {namespace, name, version} with an
                 # optional "package" key for cross-package references.
-                trait_refs = version_data.get("traitSet", [])
-                trait_ids = _parse_trait_set(package, namespace, member_name, version_str, trait_refs)
+                # Structure is guaranteed by schema validation in
+                # _load_env_var_yamls.
+                trait_ids = [
+                    _make_versioned_id(
+                        ref.get("package", package),
+                        ref["namespace"],
+                        ref["name"],
+                        ref["version"],
+                    )
+                    for ref in version_data.get("traitSet", [])
+                ]
 
                 definitions[spec_id] = SpecificationDefinition(
                     spec_id=spec_id,
@@ -421,58 +449,6 @@ def _build_specifications(package: str, specs_section: dict[str, Any]) -> dict[s
                     trait_ids=trait_ids,
                 )
     return definitions
-
-
-def _parse_trait_set(
-    package: str,
-    spec_namespace: str,
-    spec_member: str,
-    spec_version: str,
-    trait_refs: list[Any],
-) -> list[str]:
-    """Parse a specification's traitSet entries into trait IDs.
-
-    Each entry should be a dict with ``namespace``, ``name``, and ``version`` keys (and
-    an optional ``package`` override). Malformed entries (non-dict, missing keys) are
-    logged as warnings and skipped rather than aborting the entire catalogue build.
-
-    :param package: Default package name from the specification's YAML root.
-    :param spec_namespace: Namespace of the specification (for log context).
-    :param spec_member: Member name of the specification (for log context).
-    :param spec_version: Version of the specification (for log context).
-    :param trait_refs: Raw list of traitSet entries from the YAML.
-
-    :returns: List of fully-qualified trait ID strings.
-    """
-    spec_label = f"{spec_namespace}.{spec_member} v{spec_version}"
-    trait_ids: list[str] = []
-    for ref in trait_refs:
-        if not isinstance(ref, dict):
-            _log.warning(
-                "Package '%s': traitSet entry in specification '%s' is not a mapping, skipping: %s",
-                package,
-                spec_label,
-                ref,
-            )
-            continue
-        try:
-            trait_ids.append(
-                _make_versioned_id(
-                    ref.get("package", package),
-                    ref["namespace"],
-                    ref["name"],
-                    ref["version"],
-                )
-            )
-        except KeyError as exc:
-            _log.warning(
-                "Package '%s': traitSet entry in specification '%s' missing key %s, skipping: %s",
-                package,
-                spec_label,
-                exc,
-                ref,
-            )
-    return trait_ids
 
 
 def _make_versioned_id(package: str, namespace: str, member_name: str, version_str: str) -> str:

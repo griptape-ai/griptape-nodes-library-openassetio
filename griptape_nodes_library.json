@@ -13,6 +13,7 @@
         ],
         "dependencies": {
             "pip_dependencies": [
+                "jsonschema>=4.0",
                 "openassetio~=1.0.0",
                 "openassetio-mediacreation>=1.0.0a12",
                 "pyyaml>=6.0"
