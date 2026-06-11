@@ -16,7 +16,8 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from griptape_nodes.exe_types.core_types import Parameter, ParameterGroup, ParameterMode
-from griptape_nodes.exe_types.node_types import DataNode
+from griptape_nodes.exe_types.node_types import BaseNode, DataNode
+from griptape_nodes.node_library.library_registry import NodeMetadata
 from griptape_nodes.retained_mode.events.connection_events import (
     CreateConnectionRequest,
     CreateConnectionResultSuccess,
@@ -24,6 +25,10 @@ from griptape_nodes.retained_mode.events.connection_events import (
 from griptape_nodes.retained_mode.events.flow_events import (
     CreateFlowRequest,
     CreateFlowResultSuccess,
+)
+from griptape_nodes.retained_mode.events.node_events import (
+    CreateNodeRequest,
+    CreateNodeResultSuccess,
 )
 from griptape_nodes.retained_mode.events.parameter_events import (
     AddParameterGroupToNodeRequest,
@@ -40,56 +45,10 @@ from griptape_nodes_library_openassetio.trait_catalogue import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from griptape_nodes.exe_types.node_types import BaseNode
-
-
-@pytest.fixture
-def openassetio_test_library(
-    create_and_register_openassetio_library: Callable[[TraitCatalogue], str],
-    stub_trait_catalogue: TraitCatalogue,
-) -> str:
-    """Register a temporary library with a test TraitCatalogue."""
-    return create_and_register_openassetio_library(stub_trait_catalogue)
-
-
-def _register_node_in_flow(engine: GriptapeNodes, node: BaseNode, flow_name: str) -> None:
-    """Register a manually-created node with the engine so events work.
-
-    :param engine: The engine singleton.
-    :param node: The node instance to register.
-    :param flow_name: The flow to add the node to.
-    """
-    flow = engine.FlowManager().get_flow_by_name(flow_name)
-    flow.add_node(node)
-    engine.ObjectManager().add_object_by_name(node.name, node)
-    engine.NodeManager()._name_to_parent_flow_name[node.name] = flow_name  # noqa: SLF001
-
 
 @pytest.mark.usefixtures("griptape_nodes")
 class TestResolveEntityDynamicParameters:
     """Integration tests for dynamic parameter creation via the engine."""
-
-    @pytest.fixture
-    def engine(self) -> GriptapeNodes:
-        """Provide the initialised engine singleton."""
-        return GriptapeNodes()
-
-    @pytest.fixture
-    def flow_name(self, engine: GriptapeNodes) -> str:
-        """Create a workflow and flow for the test."""
-        engine.ContextManager().push_workflow("test_wf")
-        result = engine.handle_request(
-            CreateFlowRequest(parent_flow_name=None, flow_name="test_flow", set_as_new_context=True)
-        )
-        assert isinstance(result, CreateFlowResultSuccess)
-        return result.flow_name
-
-    @pytest.fixture
-    def node(self, openassetio_test_library: str, engine: GriptapeNodes, flow_name: str) -> ResolveEntity:
-        """Create a ResolveEntity node registered with the engine."""
-        node = ResolveEntity(name="resolve", metadata={"library": openassetio_test_library})
-        _register_node_in_flow(engine, node, flow_name)
-        return node
 
     def test_selecting_trait_creates_output_parameters(self, node: ResolveEntity) -> None:
         """Selecting a trait ID should create output parameters for its properties."""
@@ -233,9 +192,8 @@ class TestResolveEntityDynamicParameters:
 
     def test_name_collision_package_equals_namespace(
         self,
-        create_and_register_openassetio_library: Callable[[TraitCatalogue], str],
-        engine: GriptapeNodes,
-        flow_name: str,
+        create_and_register_openassetio_library: Callable[..., str],
+        create_node: Callable[..., BaseNode],
     ) -> None:
         """Package and namespace with the same name produce distinct groups."""
         # Register a separate library with a catalogue crafted to provoke
@@ -269,10 +227,10 @@ class TestResolveEntityDynamicParameters:
             },
             specifications={},
         )
-        library_name = create_and_register_openassetio_library(catalogue)
+        collision_library = create_and_register_openassetio_library(catalogue, ((ResolveEntity, _RESOLVE_ENTITY_META),))
 
-        node = ResolveEntity(name="collision_node", metadata={"library": library_name})
-        _register_node_in_flow(engine, node, flow_name)
+        node = create_node("ResolveEntity", "collision_node", library_name=collision_library)
+        assert isinstance(node, ResolveEntity)
 
         # Bypass MultiOptions validation by calling _rebuild_dynamic_outputs directly.
         node._rebuild_dynamic_outputs(["content:data.FileRef", "test:content.Metadata"])  # noqa: SLF001
@@ -301,7 +259,10 @@ class TestResolveEntityDynamicParameters:
         assert author_param.parent_element_name == "test:content.Metadata"
 
     def test_dynamic_parameters_survive_serialize_roundtrip(
-        self, node: ResolveEntity, openassetio_test_library: str, engine: GriptapeNodes, flow_name: str
+        self,
+        node: ResolveEntity,
+        create_node: Callable[..., BaseNode],
+        engine: GriptapeNodes,
     ) -> None:
         """Dynamic params and groups survive a serialize → replay cycle."""
         node.set_parameter_value("trait_ids", ["test:content.LocatableContent"])
@@ -340,8 +301,7 @@ class TestResolveEntityDynamicParameters:
         assert "test:content.LocatableContent.mimeType" in param_names
 
         # Replay on a fresh node.
-        fresh_node = ResolveEntity(name="fresh_node", metadata={"library": openassetio_test_library})
-        _register_node_in_flow(engine, fresh_node, flow_name)
+        fresh_node = create_node("ResolveEntity", "fresh_node")
 
         assert fresh_node.get_parameter_by_name("test:content.LocatableContent.location") is None
 
@@ -386,18 +346,16 @@ class TestResolveEntityDynamicParameters:
 
     def test_connection_survives_rebuild_with_same_trait_ids(
         self,
-        engine: GriptapeNodes,
         node: ResolveEntity,
-        flow_name: str,
+        create_node: Callable[..., BaseNode],
     ) -> None:
         """A connection to a dynamic output must persist when trait_ids is re-set."""
         node.set_parameter_value("trait_ids", ["test:content.LocatableContent"])
 
         # Create a downstream node and connect to the dynamic output.
-        downstream = _DownstreamNode(name="downstream")
-        _register_node_in_flow(engine, downstream, flow_name)
+        create_node("_DownstreamNode", "downstream")
 
-        result = engine.handle_request(
+        result = GriptapeNodes.handle_request(
             CreateConnectionRequest(
                 source_node_name="resolve",
                 source_parameter_name="test:content.LocatableContent.location",
@@ -408,7 +366,7 @@ class TestResolveEntityDynamicParameters:
         assert isinstance(result, CreateConnectionResultSuccess)
 
         # Verify the connection exists before the rebuild.
-        connections = engine.FlowManager().get_connections()
+        connections = GriptapeNodes.FlowManager().get_connections()
         outgoing = connections.outgoing_index.get("resolve", {})
         assert "test:content.LocatableContent.location" in outgoing
 
@@ -416,7 +374,7 @@ class TestResolveEntityDynamicParameters:
         node.set_parameter_value("trait_ids", ["test:content.LocatableContent"])
 
         # The connection must still exist after rebuild.
-        connections_after = engine.FlowManager().get_connections()
+        connections_after = GriptapeNodes.FlowManager().get_connections()
         outgoing_after = connections_after.outgoing_index.get("resolve", {})
         assert "test:content.LocatableContent.location" in outgoing_after
 
@@ -426,6 +384,11 @@ class TestResolveEntityDynamicParameters:
         connection = connections_after.connections[connection_ids[0]]
         current_param = node.get_parameter_by_name("test:content.LocatableContent.location")
         assert connection.source_parameter is current_param
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
 
 
 class _DownstreamNode(DataNode):
@@ -446,3 +409,93 @@ class _DownstreamNode(DataNode):
 
     def process(self) -> None:
         """No-op."""
+
+
+_RESOLVE_ENTITY_META = NodeMetadata(
+    category="OpenAssetIO",
+    description="Resolve an entity reference",
+    display_name="Resolve Entity",
+)
+
+_DOWNSTREAM_NODE_META = NodeMetadata(
+    category="test",
+    description="Test downstream node",
+    display_name="Downstream",
+)
+
+_DEFAULT_NODE_TYPES: tuple[tuple[type[BaseNode], NodeMetadata], ...] = (
+    (ResolveEntity, _RESOLVE_ENTITY_META),
+    (_DownstreamNode, _DOWNSTREAM_NODE_META),
+)
+
+
+@pytest.fixture
+def engine() -> GriptapeNodes:
+    """Provide the initialised engine singleton."""
+    return GriptapeNodes()
+
+
+@pytest.fixture
+def flow_name(engine: GriptapeNodes) -> str:
+    """Create a workflow and flow for the test."""
+    engine.ContextManager().push_workflow("test_wf")
+    result = engine.handle_request(
+        CreateFlowRequest(parent_flow_name=None, flow_name="test_flow", set_as_new_context=True)
+    )
+    assert isinstance(result, CreateFlowResultSuccess)
+    return result.flow_name
+
+
+@pytest.fixture
+def openassetio_test_library(
+    create_and_register_openassetio_library: Callable[..., str],
+    stub_trait_catalogue: TraitCatalogue,
+) -> str:
+    """Register a temporary library with a test TraitCatalogue."""
+    return create_and_register_openassetio_library(stub_trait_catalogue, _DEFAULT_NODE_TYPES)
+
+
+@pytest.fixture
+def create_node(
+    engine: GriptapeNodes,
+    flow_name: str,
+    openassetio_test_library: str,
+) -> Callable[..., BaseNode]:
+    """Return a factory that creates nodes via the engine event system.
+
+    The factory signature is:
+
+    ::
+
+        create_node(node_type, node_name, *, library_name=None) -> BaseNode
+
+    :param engine: The engine singleton.
+    :param flow_name: Flow to create nodes in.
+    :param openassetio_test_library: Default library name.
+
+    :returns: A callable node factory.
+    """
+
+    def _factory(node_type: str, node_name: str, *, library_name: str | None = None) -> BaseNode:
+        result = engine.handle_request(
+            CreateNodeRequest(
+                node_type=node_type,
+                specific_library_name=library_name or openassetio_test_library,
+                node_name=node_name,
+                override_parent_flow_name=flow_name,
+            )
+        )
+        assert isinstance(result, CreateNodeResultSuccess)
+        created = engine.ObjectManager().get_object_by_name(result.node_name)
+        assert isinstance(created, BaseNode)
+        return created
+
+    return _factory
+
+
+@pytest.fixture
+def node(create_node: Callable[..., BaseNode]) -> ResolveEntity:
+    """Create a ResolveEntity node registered with the engine."""
+    created = create_node("ResolveEntity", "resolve")
+    assert isinstance(created, ResolveEntity)
+    return created
