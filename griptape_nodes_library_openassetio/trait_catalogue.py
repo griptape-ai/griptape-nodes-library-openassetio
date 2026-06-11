@@ -216,6 +216,24 @@ class TraitCatalogue:
         # De-dupe. Guaranteed order-preserving in Python 3.7+.
         return list(dict.fromkeys(result))
 
+    def unknown_ids_for_usage(self, selected_ids: list[str], usage: str) -> list[str]:
+        """Return selected IDs that are not choosable traits/specifications for a usage.
+
+        Used to detect when a workflow was created against a trait catalogue that
+        differs from the current one (e.g. a custom trait definition file is missing).
+        The check is deliberately run against the raw selection rather than the expanded
+        trait IDs, because :meth:`expand_to_trait_ids_for_usage` silently drops unknown
+        IDs.
+
+        :param selected_ids: The raw list of selected trait and/or specification IDs.
+        :param usage: The usage string the selection was made under.
+
+        :returns: The subset of ``selected_ids`` absent from the catalogue for this
+            usage, in their original order.
+        """
+        choosable = set(self.choosable_ids_for_usage(usage))
+        return [selected_id for selected_id in selected_ids if selected_id not in choosable]
+
 
 def load_default_catalogue() -> TraitCatalogue:
     """Build the default trait catalogue from disk.
@@ -293,25 +311,15 @@ def _load_default_yaml() -> dict[str, Any]:
 def _load_env_var_yamls() -> list[dict[str, Any]]:
     """Load parsed YAML dicts from paths in :data:`_ENV_VAR`.
 
-    Each path in the ``os.pathsep``-separated value is read and parsed. Paths that do
-    not exist or fail to parse are logged as warnings and skipped.
+    Paths are discovered via :func:`env_var_trait_definition_paths`; each file is read,
+    parsed, and validated against the trait JSON Schema. Files that fail to parse or
+    validate are logged as warnings and skipped.
 
     :returns: List of parsed YAML dicts, one per successfully loaded file, in the order
         they appear in the env var.
     """
-    raw = os.environ.get(_ENV_VAR, "")
-    if not raw:
-        return []
-
     yaml_list: list[dict[str, Any]] = []
-    for raw_segment in raw.split(os.pathsep):
-        stripped = raw_segment.strip()
-        if not stripped:
-            continue
-        path = Path(stripped)
-        if not path.is_file():
-            _log.warning("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS: skipping non-existent path: %s", path)
-            continue
+    for path in env_var_trait_definition_paths():
         try:
             yaml_data = yaml.safe_load(path.read_text(encoding="utf-8"))
         except (OSError, yaml.YAMLError) as exc:
@@ -345,6 +353,33 @@ def _load_env_var_yamls() -> list[dict[str, Any]]:
         yaml_list.append(yaml_data)
 
     return yaml_list
+
+
+def env_var_trait_definition_paths() -> list[Path]:
+    """Return existing trait definition file paths listed in :data:`_ENV_VAR`.
+
+    The env var value is treated as an ``os.pathsep``-separated list of file paths.
+    Empty segments are ignored; paths that do not point at an existing file are logged
+    as warnings and skipped. Shared by the catalogue loader and by nodes that need to
+    declare these files as dependencies.
+
+    :returns: The existing file paths, in the order they appear in the env var.
+    """
+    raw = os.environ.get(_ENV_VAR, "")
+    if not raw:
+        return []
+
+    paths: list[Path] = []
+    for raw_segment in raw.split(os.pathsep):
+        stripped = raw_segment.strip()
+        if not stripped:
+            continue
+        path = Path(stripped)
+        if not path.is_file():
+            _log.warning("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS: skipping non-existent path: %s", path)
+            continue
+        paths.append(path)
+    return paths
 
 
 def _build_namespace_descriptions(package: str, traits_section: dict[str, Any]) -> dict[str, str]:

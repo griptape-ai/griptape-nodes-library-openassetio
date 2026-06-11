@@ -400,6 +400,44 @@ class TestExpandToTraitIdsForUsage:
         assert catalogue.expand_to_trait_ids_for_usage([], "entity") == []
 
 
+class TestUnknownIdsForUsage:
+    """Tests for unknown_ids_for_usage() — divergence detection."""
+
+    def test_all_present_returns_empty(self, catalogue: TraitCatalogue) -> None:
+        """Selected IDs that are all choosable for the usage yield no unknowns."""
+        selected = ["test-traits:content.LocatableContent"]
+        assert catalogue.unknown_ids_for_usage(selected, "entity") == []
+
+    def test_unknown_id_reported(self, catalogue: TraitCatalogue) -> None:
+        """An ID absent from the catalogue is reported as unknown."""
+        selected = ["test-traits:content.LocatableContent", "gone:content.Vanished"]
+        assert catalogue.unknown_ids_for_usage(selected, "entity") == ["gone:content.Vanished"]
+
+    def test_specification_id_not_reported(self, catalogue: TraitCatalogue) -> None:
+        """A specification ID choosable for the usage is not reported as unknown."""
+        selected = ["test-traits:specification:locale.RegionalLocale"]
+        assert catalogue.unknown_ids_for_usage(selected, "locale") == []
+
+    def test_valid_trait_wrong_usage_reported(self, catalogue: TraitCatalogue) -> None:
+        """A trait valid for another usage but not the requested one is reported."""
+        # LocatableContent is an entity trait; under locale usage it is not choosable.
+        selected = ["test-traits:content.LocatableContent"]
+        assert catalogue.unknown_ids_for_usage(selected, "locale") == ["test-traits:content.LocatableContent"]
+
+    def test_mixed_returns_only_unknown_preserving_order(self, catalogue: TraitCatalogue) -> None:
+        """Only unknown IDs are returned, in their original order."""
+        selected = [
+            "gone:one.A",
+            "test-traits:content.LocatableContent",
+            "gone:two.B",
+        ]
+        assert catalogue.unknown_ids_for_usage(selected, "entity") == ["gone:one.A", "gone:two.B"]
+
+    def test_empty_selection_returns_empty(self, catalogue: TraitCatalogue) -> None:
+        """No selection yields no unknowns."""
+        assert catalogue.unknown_ids_for_usage([], "entity") == []
+
+
 class TestLoadDefaultCatalogue:
     """Tests for the load_default_catalogue() function."""
 
@@ -560,6 +598,54 @@ class TestBuildCatalogueFromYamlList:
         # The entry is skipped — package description is not recorded.
         assert not result.get_package_description("empty-pkg")
         assert "empty-pkg" in caplog.text
+
+
+class TestEnvVarTraitDefinitionPaths:
+    """Tests for env_var_trait_definition_paths()."""
+
+    def test_returns_empty_when_env_var_not_set(self) -> None:
+        """Returns an empty list when the env var is not set."""
+        assert catalogue_mod.env_var_trait_definition_paths() == []
+
+    def test_returns_empty_for_empty_env_var(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Returns an empty list when the env var is empty."""
+        monkeypatch.setenv("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS", "")
+        assert catalogue_mod.env_var_trait_definition_paths() == []
+
+    def test_returns_single_existing_path(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """A single existing path is returned as a Path."""
+        yaml_file = tmp_path / "traits.yml"
+        yaml_file.write_text("dummy")
+        monkeypatch.setenv("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS", str(yaml_file))
+
+        assert catalogue_mod.env_var_trait_definition_paths() == [yaml_file]
+
+    def test_returns_multiple_existing_paths_in_order(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        """Multiple os.pathsep-separated existing paths are returned in order."""
+        file_a = tmp_path / "a.yml"
+        file_a.write_text("a")
+        file_b = tmp_path / "b.yml"
+        file_b.write_text("b")
+        monkeypatch.setenv("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS", f"{file_a}{os.pathsep}{file_b}")
+
+        assert catalogue_mod.env_var_trait_definition_paths() == [file_a, file_b]
+
+    def test_skips_nonexistent_path_with_warning(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Non-existent paths are skipped with a warning."""
+        monkeypatch.setenv("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS", str(tmp_path / "missing.yml"))
+
+        with caplog.at_level(logging.WARNING):
+            result = catalogue_mod.env_var_trait_definition_paths()
+
+        assert result == []
+        assert "non-existent path" in caplog.text
+
+    def test_skips_empty_segments(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Empty segments in the path list are skipped."""
+        monkeypatch.setenv("OPENASSETIO_GRIPTAPE_TRAIT_DEFINITIONS", f"{os.pathsep}{os.pathsep}")
+        assert catalogue_mod.env_var_trait_definition_paths() == []
 
 
 class TestLoadEnvVarYamls:

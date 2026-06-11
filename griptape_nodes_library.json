@@ -49,6 +49,15 @@
         "description": "Convert between file paths and file:// URLs with cross-platform support",
         "display_name": "File URL Path Converter"
       }
+    },
+    {
+      "class_name": "Traits",
+      "file_path": "griptape_nodes_library_openassetio/traits_node.py",
+      "metadata": {
+        "category": "OpenAssetIO",
+        "description": "Build, extract, and mutate TraitsData objects using the trait catalogue",
+        "display_name": "Traits"
+      }
     }
   ]
 }
