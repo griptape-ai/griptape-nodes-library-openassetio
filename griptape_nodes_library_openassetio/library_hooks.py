@@ -22,15 +22,15 @@ class LibraryHooks(AdvancedNodeLibrary):
 
     The engine creates this instance, calls :meth:`before_library_nodes_loaded`, and
     stores it on the ``Library`` object. Nodes retrieve it at construction time via
-    ``LibraryRegistry.get_library(name).get_advanced_library().catalogue``.
+    ``LibraryRegistry.get_library(name).get_advanced_library().trait_catalogue``.
     """
 
     def __init__(self) -> None:
         """Initialise with no catalogue (populated by the lifecycle hook)."""
-        self._catalogue: TraitCatalogue | None = None
+        self._trait_catalogue: TraitCatalogue | None = None
 
     @property
-    def catalogue(self) -> TraitCatalogue:
+    def trait_catalogue(self) -> TraitCatalogue:
         """Return the shared trait catalogue.
 
         :returns: The shared :class:`TraitCatalogue` instance.
@@ -38,10 +38,10 @@ class LibraryHooks(AdvancedNodeLibrary):
         :raises RuntimeError: If the catalogue has not been initialised yet (i.e.
             :meth:`before_library_nodes_loaded` has not been called).
         """
-        if self._catalogue is None:
+        if self._trait_catalogue is None:
             msg = "Trait catalogue not initialised. LibraryHooks.before_library_nodes_loaded() has not been called."
             raise RuntimeError(msg)
-        return self._catalogue
+        return self._trait_catalogue
 
     def before_library_nodes_loaded(self, library_data: LibrarySchema, library: Library) -> None:  # noqa: ARG002
         """Build the trait catalogue before any node classes are imported.
@@ -49,4 +49,4 @@ class LibraryHooks(AdvancedNodeLibrary):
         :param library_data: The library schema (unused, required by interface).
         :param library: The library instance (unused, required by interface).
         """
-        self._catalogue = load_default_catalogue()
+        self._trait_catalogue = load_default_catalogue()
