@@ -82,7 +82,7 @@ def create_and_register_openassetio_library() -> Iterator[Callable[[TraitCatalog
         name = f"openassetio-test-{uuid.uuid4().hex[:8]}"
 
         hooks = LibraryHooks()
-        hooks._catalogue = catalogue  # noqa: SLF001
+        hooks._trait_catalogue = catalogue  # noqa: SLF001
 
         library_data = LibrarySchema(
             name=name,

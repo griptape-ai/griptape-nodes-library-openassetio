@@ -384,14 +384,14 @@ def _get_trait_catalogue(metadata: dict[str, Any]) -> TraitCatalogue:
         return TraitCatalogue({})
 
     library = LibraryRegistry.get_library(library_name)
-    # Access .catalogue via duck-typing rather than isinstance(hooks, LibraryHooks). The
+    # Access .trait_catalogue via duck-typing rather than isinstance(hooks, LibraryHooks). The
     # engine loads library_hooks.py via importlib with a dynamic module name
     # (gtn_dynamic_module_*), producing a different class identity to our normal import
     # of LibraryHooks. The attribute is invariant at runtime — the engine aborts library
     # registration if the AdvancedNodeLibrary fails to load, so nodes are never
     # constructed without it.
     hooks = library.get_advanced_library()
-    return hooks.catalogue  # type: ignore[union-attr,attr-defined]
+    return hooks.trait_catalogue  # type: ignore[union-attr,attr-defined]
 
 
 def _is_dynamic_output_parameter(param: Parameter) -> bool:

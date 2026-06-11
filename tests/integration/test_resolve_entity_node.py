@@ -138,12 +138,12 @@ class TestResolveEntityDynamicModuleLoading:
             "LibraryHooks",
             (AdvancedNodeLibrary,),
             {
-                "_catalogue": None,
-                "catalogue": property(lambda self: self._catalogue),
+                "_trait_catalogue": None,
+                "trait_catalogue": property(lambda self: self._trait_catalogue),
             },
         )
         hooks = DynamicLibraryHooks()
-        hooks._catalogue = catalogue  # type: ignore[attr-defined]  # noqa: SLF001
+        hooks._trait_catalogue = catalogue  # type: ignore[attr-defined]  # noqa: SLF001
 
         library_data = LibrarySchema(
             name="openassetio-dynamic-test",
