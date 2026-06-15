@@ -1,0 +1,39 @@
+# griptape-nodes-library-openassetio
+# Copyright (c) 2026 The Foundry Visionmongers Ltd
+# SPDX-License-Identifier: Apache-2.0
+
+[manager]
+identifier = "org.openassetio.examples.manager.bal"
+
+[manager.settings]
+library_json = """
+{
+  "managementPolicy": {
+    "read": {
+      "default": {
+        "openassetio-mediacreation:managementPolicy.Managed": {}
+      }
+    },
+    "write": {
+      "default": {
+        "openassetio-mediacreation:managementPolicy.Managed": {}
+      }
+    }
+  },
+  "entities": {
+    "test/publish_target": {
+      "versions": [
+        {
+          "traits": {
+            "openassetio-mediacreation:usage.Entity": {},
+            "openassetio-mediacreation:content.LocatableContent": {
+              "location": "file:///mnt/assets/test/publish_target.exr",
+              "mimeType": "image/x-exr"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+"""
