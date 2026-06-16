@@ -10,8 +10,8 @@ from unittest.mock import Mock, create_autospec
 
 import griptape_nodes_library_openassetio.resolve_entity_node as resolve_node_mod
 import pytest
-from griptape_nodes.exe_types.core_types import ParameterMode
-from griptape_nodes.exe_types.node_types import SuccessFailureNode
+from griptape_nodes.exe_types.core_types import Parameter, ParameterMode
+from griptape_nodes.exe_types.node_types import BaseNode, SuccessFailureNode
 from griptape_nodes_library_openassetio.resolve_entity import resolve_entity
 from griptape_nodes_library_openassetio.resolve_entity_node import ResolveEntity
 from openassetio.access import ResolveAccess
@@ -361,3 +361,70 @@ class TestResolveEntityProcess:
 
         assert node._execution_succeeded is False  # noqa: SLF001
         assert node.parameter_output_values["result_details"] == "FAILURE: Entity not found"
+
+
+@pytest.mark.usefixtures("griptape_nodes")
+class TestResolveEntityConnectionCallbacks:
+    """Tests for auto-access switching when connecting working_reference."""
+
+    @pytest.fixture
+    def node(self) -> ResolveEntity:
+        """Create a fresh ResolveEntity node."""
+        return ResolveEntity(name="test_resolve_conn")
+
+    def test_connecting_working_reference_sets_manager_driven(self, node: ResolveEntity) -> None:
+        """Connecting working_reference to entity_reference should switch access to Manager Driven."""
+        source_node = Mock(spec=BaseNode)
+        source_param = Mock(spec=Parameter)
+        source_param.name = "working_reference"
+        target_param = node.get_parameter_by_name("entity_reference")
+        assert target_param is not None
+
+        node.after_incoming_connection(source_node, source_param, target_param)
+
+        assert node.parameter_values["access"] == "Manager Driven"
+
+    def test_disconnecting_working_reference_reverts_to_read(self, node: ResolveEntity) -> None:
+        """Disconnecting working_reference should revert access to Read."""
+        # Start with Manager Driven (as if connected).
+        node.set_parameter_value("access", "Manager Driven")
+
+        source_node = Mock(spec=BaseNode)
+        source_param = Mock(spec=Parameter)
+        source_param.name = "working_reference"
+        target_param = node.get_parameter_by_name("entity_reference")
+        assert target_param is not None
+
+        node.after_incoming_connection_removed(source_node, source_param, target_param)
+
+        assert node.parameter_values["access"] == "Read"
+
+    def test_connecting_non_working_reference_keeps_read(self, node: ResolveEntity) -> None:
+        """Connecting a non-working_reference source should not change access."""
+        source_node = Mock(spec=BaseNode)
+        source_param = Mock(spec=Parameter)
+        source_param.name = "entity_reference"
+        target_param = node.get_parameter_by_name("entity_reference")
+        assert target_param is not None
+
+        node.after_incoming_connection(source_node, source_param, target_param)
+
+        # Access was never explicitly set, so it retains the parameter default.
+        access_param = node.get_parameter_by_name("access")
+        assert access_param is not None
+        assert access_param.default_value == "Read"
+        assert node.parameter_values.get("access", "Read") == "Read"
+
+    def test_disconnecting_non_working_reference_does_not_change_access(self, node: ResolveEntity) -> None:
+        """Disconnecting a non-working_reference source should not revert access."""
+        node.set_parameter_value("access", "Manager Driven")
+
+        source_node = Mock(spec=BaseNode)
+        source_param = Mock(spec=Parameter)
+        source_param.name = "other_param"
+        target_param = node.get_parameter_by_name("entity_reference")
+        assert target_param is not None
+
+        node.after_incoming_connection_removed(source_node, source_param, target_param)
+
+        assert node.parameter_values["access"] == "Manager Driven"
