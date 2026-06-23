@@ -94,6 +94,15 @@
         "description": "Register an entity to finalise publication",
         "display_name": "Register Entity"
       }
+    },
+    {
+      "class_name": "CreateChildContext",
+      "file_path": "griptape_nodes_library_openassetio/create_child_context_node.py",
+      "metadata": {
+        "category": "OpenAssetIO",
+        "description": "Create a child context, optionally updating its locale with trait data",
+        "display_name": "Create Child Context"
+      }
     }
   ]
 }
