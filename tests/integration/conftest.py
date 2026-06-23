@@ -94,6 +94,28 @@ def openassetio_publish_config_env(
 
 
 @pytest.fixture
+def bal_relationship_config() -> str:
+    """Return the path to the relationship-test BAL config file."""
+    return str(_RESOURCES / "openassetio.config.bal.relationship.toml")
+
+
+@pytest.fixture
+def openassetio_relationship_config_env(
+    monkeypatch: pytest.MonkeyPatch,
+    bal_relationship_config: str,
+) -> str:
+    """Set ``OPENASSETIO_DEFAULT_CONFIG`` to the relationship-test BAL config.
+
+    :param monkeypatch: Pytest monkeypatch fixture.
+    :param bal_relationship_config: Path to the relationship-test BAL config.
+
+    :returns: The config file path that was set.
+    """
+    monkeypatch.setenv("OPENASSETIO_DEFAULT_CONFIG", bal_relationship_config)
+    return bal_relationship_config
+
+
+@pytest.fixture
 def create_and_register_openassetio_library() -> Iterator[
     Callable[[TraitCatalogue, tuple[tuple[type[BaseNode], NodeMetadata], ...]], str]
 ]:
