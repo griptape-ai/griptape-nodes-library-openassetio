@@ -66,7 +66,7 @@ pyproject = tomllib.load(open('pyproject.toml', 'rb')); \
 deps = [d for d in pyproject['project']['dependencies'] if not d.startswith('griptape-nodes')]; \
 lib = json.load(open('$(LIBRARY_JSON)')); \
 lib['metadata'].setdefault('dependencies', {})['pip_dependencies'] = deps; \
-open('$(LIBRARY_JSON)', 'w').write(json.dumps(lib, indent=4) + '\n'); \
+open('$(LIBRARY_JSON)', 'w').write(json.dumps(lib, indent=2) + '\n'); \
 print(f'Synced {len(deps)} dependencies to $(LIBRARY_JSON)')"
 
 .PHONY: install
