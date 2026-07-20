@@ -1,11 +1,11 @@
 {
   "name": "OpenAssetIO",
-  "library_schema_version": "0.5.0",
+  "library_schema_version": "0.10.0",
   "metadata": {
     "author": "The Foundry Visionmongers Ltd",
     "description": "Griptape Nodes library for OpenAssetIO asset management integration",
     "library_version": "0.1.0",
-    "engine_version": "0.85.3",
+    "engine_version": "0.90.0",
     "tags": [
       "OpenAssetIO",
       "Asset Management",
