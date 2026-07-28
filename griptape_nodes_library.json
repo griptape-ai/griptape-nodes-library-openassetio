@@ -13,7 +13,10 @@
     ],
     "dependencies": {
       "pip_dependencies": [
-        "openassetio~=1.0.0"
+        "openassetio~=1.0.0",
+        "openassetio-mediacreation>=1.0.0a12",
+        "jsonschema~=4.26.0",
+        "PyYAML~=6.0.3"
       ]
     }
   },
@@ -27,6 +30,7 @@
       }
     }
   ],
+  "advanced_library_path": "griptape_nodes_library_openassetio/library_hooks.py",
   "nodes": [
     {
       "class_name": "OpenAssetIOSession",
@@ -44,6 +48,15 @@
         "category": "OpenAssetIO",
         "description": "Convert between file paths and file:// URLs with cross-platform support",
         "display_name": "File URL Path Converter"
+      }
+    },
+    {
+      "class_name": "Traits",
+      "file_path": "griptape_nodes_library_openassetio/traits_node.py",
+      "metadata": {
+        "category": "OpenAssetIO",
+        "description": "Build, extract, and mutate TraitsData objects using the trait catalogue",
+        "display_name": "Traits"
       }
     }
   ]
