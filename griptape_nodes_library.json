@@ -36,6 +36,15 @@
         "description": "Initialise an OpenAssetIO session and connect to the configured asset manager",
         "display_name": "OpenAssetIO Session"
       }
+    },
+    {
+      "class_name": "FileUrlConverter",
+      "file_path": "griptape_nodes_library_openassetio/file_url_converter_node.py",
+      "metadata": {
+        "category": "OpenAssetIO",
+        "description": "Convert between file paths and file:// URLs with cross-platform support",
+        "display_name": "File URL Path Converter"
+      }
     }
   ]
 }
