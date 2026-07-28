@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 from griptape_nodes.exe_types.core_types import Parameter, ParameterMode
-from griptape_nodes.exe_types.node_types import SuccessFailureNode
+from griptape_nodes.exe_types.node_types import BaseNode, SuccessFailureNode
 from griptape_nodes.traits.options import Options
 from openassetio.access import ResolveAccess
 from openassetio.errors import OpenAssetIOException
@@ -104,6 +104,39 @@ class ResolveEntity(SuccessFailureNode):
             result_details_tooltip="Details about the resolve operation result",
             result_details_placeholder="Resolve result will be shown here.",
         )
+
+    def after_incoming_connection(
+        self,
+        source_node: BaseNode,
+        source_parameter: Parameter,
+        target_parameter: Parameter,
+    ) -> None:
+        """Auto-switch access to Manager Driven when working_reference is connected.
+
+        :param source_node: The node providing the connection.
+        :param source_parameter: The parameter on the source node.
+        :param target_parameter: The parameter on this node receiving the connection.
+        """
+        if target_parameter.name == "entity_reference" and source_parameter.name == "working_reference":
+            self.set_parameter_value("access", "Manager Driven")
+        super().after_incoming_connection(source_node, source_parameter, target_parameter)
+
+    def after_incoming_connection_removed(
+        self,
+        source_node: BaseNode,
+        source_parameter: Parameter,
+        target_parameter: Parameter,
+    ) -> None:
+        """Revert access to Read when working_reference is disconnected.
+
+        :param source_node: The node that was providing the connection.
+        :param source_parameter: The parameter on the source node.
+        :param target_parameter: The parameter on this node that was receiving the
+            connection.
+        """
+        if target_parameter.name == "entity_reference" and source_parameter.name == "working_reference":
+            self.set_parameter_value("access", "Read")
+        super().after_incoming_connection_removed(source_node, source_parameter, target_parameter)
 
     def validate_before_node_run(self) -> list[Exception] | None:
         """Check that required inputs are present before execution.

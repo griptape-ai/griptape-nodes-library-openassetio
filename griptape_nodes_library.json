@@ -76,6 +76,24 @@
         "description": "Resolve an entity reference and output trait property values",
         "display_name": "Resolve Entity"
       }
+    },
+    {
+      "class_name": "PreflightEntity",
+      "file_path": "griptape_nodes_library_openassetio/preflight_entity_node.py",
+      "metadata": {
+        "category": "OpenAssetIO",
+        "description": "Preflight an entity reference for publishing",
+        "display_name": "Preflight Entity"
+      }
+    },
+    {
+      "class_name": "RegisterEntity",
+      "file_path": "griptape_nodes_library_openassetio/register_entity_node.py",
+      "metadata": {
+        "category": "OpenAssetIO",
+        "description": "Register an entity to finalise publication",
+        "display_name": "Register Entity"
+      }
     }
   ]
 }

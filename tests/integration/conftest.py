@@ -72,6 +72,28 @@ def openassetio_resolve_config_env(
 
 
 @pytest.fixture
+def bal_publish_config() -> str:
+    """Return the path to the publish-test BAL config file."""
+    return str(_RESOURCES / "openassetio.config.bal.publish.toml")
+
+
+@pytest.fixture
+def openassetio_publish_config_env(
+    monkeypatch: pytest.MonkeyPatch,
+    bal_publish_config: str,
+) -> str:
+    """Set ``OPENASSETIO_DEFAULT_CONFIG`` to the publish-test BAL config.
+
+    :param monkeypatch: Pytest monkeypatch fixture.
+    :param bal_publish_config: Path to the publish-test BAL config.
+
+    :returns: The config file path that was set.
+    """
+    monkeypatch.setenv("OPENASSETIO_DEFAULT_CONFIG", bal_publish_config)
+    return bal_publish_config
+
+
+@pytest.fixture
 def create_and_register_openassetio_library() -> Iterator[
     Callable[[TraitCatalogue, tuple[tuple[type[BaseNode], NodeMetadata], ...]], str]
 ]:
