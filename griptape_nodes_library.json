@@ -103,6 +103,15 @@
         "description": "Create a child context, optionally updating its locale with trait data",
         "display_name": "Create Child Context"
       }
+    },
+    {
+      "class_name": "RelatedEntities",
+      "file_path": "griptape_nodes_library_openassetio/related_entities_node.py",
+      "metadata": {
+        "category": "OpenAssetIO",
+        "description": "Query related entities via the asset manager's relationship API",
+        "display_name": "Related Entities"
+      }
     }
   ]
 }
