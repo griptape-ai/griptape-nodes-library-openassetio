@@ -10,4 +10,4 @@ the `library_version` in `griptape_nodes_library.json`.
 
 <!-- Entries go in changelog.d/, one file each. See changelog.d/README.md. -->
 
-[Unreleased]: https://github.com/griptape-ai/griptape-nodes-library-openassetio/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/griptape-ai/griptape-nodes-library-openassetio/compare/e7199f13dc199efaacc9dbea92d9dad2bf58e399...HEAD
