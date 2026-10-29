@@ -47,7 +47,9 @@ dev = [
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-extend-exclude = []
+# scripts/changelog.py and its tests are shared verbatim with the other Griptape Nodes libraries,
+# which don't follow this repo's lint rules or copyright header.
+extend-exclude = ["scripts/changelog.py", "tests/unit/changelog"]
 
 # Python linter rules.
 [tool.ruff.lint]
@@ -235,10 +237,10 @@ should-document-star-arguments = false
 check-class-attributes = false
 allow-init-docstring = true
 quiet = true
-exclude = '\.git|\.venv|__pycache__|^tests/'
+exclude = '\.git|\.venv|__pycache__|^tests/|^scripts/changelog\.py'
 
 # Formatter for docstrings, including re-wrapping short/long lines.
 [tool.docstrfmt]
 line_length = 88
-extend_exclude = []
+extend_exclude = ["scripts/changelog.py", "tests/unit/changelog"]
 docstring_trailing_line = false

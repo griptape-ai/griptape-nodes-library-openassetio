@@ -15,6 +15,8 @@ repos:
     hooks:
       - id: mdformat
         args: [--check]
+        # scripts/changelog.py owns the format of these, and mdformat would rewrite it.
+        exclude: ^(CHANGELOG\.md|changelog\.d/)
         additional_dependencies:
           - mdformat_frontmatter~=2.0.10
           - mdformat-gfm~=1.0.0
