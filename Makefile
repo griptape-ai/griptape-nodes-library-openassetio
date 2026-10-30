@@ -4,20 +4,22 @@
 SHELL := /bin/bash
 
 LIBRARY_JSON := griptape_nodes_library.json
+# CHANGELOG.md is written by scripts/changelog.py, whose format mdformat would rewrite.
+MARKDOWN := $(filter-out CHANGELOG.md,$(wildcard *.md))
 
 .PHONY: version/get
 version/get: ## Get version.
 	@jq -r '.metadata.library_version' $(LIBRARY_JSON)
 
 .PHONY: version/set
-version/set: ## Set version. Usage: make version/set v=1.2.3
+version/set: changelog/assert-committed ## Set version. Usage: make version/set v=1.2.3
 	@jq --arg v "$(v)" '.metadata.library_version = $$v' $(LIBRARY_JSON) > $(LIBRARY_JSON).tmp
 	@mv $(LIBRARY_JSON).tmp $(LIBRARY_JSON)
 	@make version/commit
 
 .PHONY: version/patch
-version/patch: ## Bump patch version.
-	@CURRENT=$$(make version/get); \
+version/patch: changelog/assert-committed ## Bump patch version.
+	@CURRENT=$$($(MAKE) --no-print-directory version/get); \
 	IFS='.' read -r major minor patch <<< "$$CURRENT"; \
 	NEW_VERSION="$${major}.$${minor}.$$((patch + 1))"; \
 	jq --arg v "$$NEW_VERSION" '.metadata.library_version = $$v' $(LIBRARY_JSON) > $(LIBRARY_JSON).tmp; \
@@ -26,8 +28,8 @@ version/patch: ## Bump patch version.
 	@make version/commit
 
 .PHONY: version/minor
-version/minor: ## Bump minor version.
-	@CURRENT=$$(make version/get); \
+version/minor: changelog/assert-committed ## Bump minor version.
+	@CURRENT=$$($(MAKE) --no-print-directory version/get); \
 	IFS='.' read -r major minor patch <<< "$$CURRENT"; \
 	NEW_VERSION="$${major}.$$((minor + 1)).0"; \
 	jq --arg v "$$NEW_VERSION" '.metadata.library_version = $$v' $(LIBRARY_JSON) > $(LIBRARY_JSON).tmp; \
@@ -36,8 +38,8 @@ version/minor: ## Bump minor version.
 	@make version/commit
 
 .PHONY: version/major
-version/major: ## Bump major version.
-	@CURRENT=$$(make version/get); \
+version/major: changelog/assert-committed ## Bump major version.
+	@CURRENT=$$($(MAKE) --no-print-directory version/get); \
 	IFS='.' read -r major minor patch <<< "$$CURRENT"; \
 	NEW_VERSION="$$((major + 1)).0.0"; \
 	jq --arg v "$$NEW_VERSION" '.metadata.library_version = $$v' $(LIBRARY_JSON) > $(LIBRARY_JSON).tmp; \
@@ -46,16 +48,27 @@ version/major: ## Bump major version.
 	@make version/commit
 
 .PHONY: version/commit
-version/commit: ## Commit version.
-	@git add $(LIBRARY_JSON)
-	@git commit -m "chore: bump v$$(make version/get)"
+version/commit: ## Roll the changelog into the version, then commit both.
+	@uv run --no-project python scripts/changelog.py roll $$($(MAKE) --no-print-directory version/get) --allow-empty
+	@git commit -m "chore: bump v$$($(MAKE) --no-print-directory version/get)" -- $(LIBRARY_JSON) CHANGELOG.md changelog.d
+
+# The roll overwrites CHANGELOG.md and deletes the entry files, and the bump commits whatever it left,
+# so an entry still being written would ship half-finished or be lost. The library JSON is covered too:
+# a bump whose roll failed leaves the new version there, and bumping again from it skips a version.
+.PHONY: changelog/assert-committed
+changelog/assert-committed:
+	@git diff --quiet HEAD -- $(LIBRARY_JSON) CHANGELOG.md changelog.d \
+		&& test -z "$$(git ls-files --others --exclude-standard -- changelog.d)" \
+		|| { echo "$(LIBRARY_JSON), CHANGELOG.md, or changelog.d holds changes that are not committed."; \
+			echo "Commit or stash them first. If a version bump stopped partway, undo it with:"; \
+			echo "  git restore $(LIBRARY_JSON) CHANGELOG.md changelog.d"; exit 1; }
 
 .PHONY: version/publish
 version/publish: ## Create and push git tags.
 	@git fetch --tags --force
-	@git tag "v$$(make version/get)"
+	@git tag "v$$($(MAKE) --no-print-directory version/get)"
 	@git tag stable -f
-	@git push origin "v$$(make version/get)"
+	@git push origin "v$$($(MAKE) --no-print-directory version/get)"
 	@git push -f origin stable
 
 .PHONY: deps/sync
@@ -98,7 +111,7 @@ lint: ## Lint project.
 format: ## Format project.
 	@uv run ruff format
 	@uv run docstrfmt .
-	@uv run mdformat *.md griptape_nodes_library_openassetio/ tests/ .github/
+	@uv run mdformat $(MARKDOWN) griptape_nodes_library_openassetio/ tests/ .github/
 
 .PHONY: fix
 fix: ## Fix project.
@@ -114,7 +127,7 @@ test/coverage: ## Run tests with branch coverage.
 	@uv run slipcover --branch --source griptape_nodes_library_openassetio --fail-under 90 -m pytest
 
 .PHONY: check
-check: check/format check/lint check/types check/json ## Run all checks.
+check: check/format check/lint check/types check/json check/changelog ## Run all checks.
 
 .PHONY: pre-commit
 pre-commit: ## Run pre-commit hooks on all files.
@@ -124,7 +137,7 @@ pre-commit: ## Run pre-commit hooks on all files.
 check/format:
 	@uv run ruff format --check
 	@uv run docstrfmt --check .
-	@uv run mdformat --check *.md griptape_nodes_library_openassetio/ tests/ .github/
+	@uv run mdformat --check $(MARKDOWN) griptape_nodes_library_openassetio/ tests/ .github/
 
 .PHONY: check/lint
 check/lint:
@@ -142,6 +155,14 @@ check/json: ## Validate JSON files.
 		! -path "./.venv/*" \
 		! -path "./node_modules/*" \
 		-exec sh -c 'jq empty "{}" > /dev/null 2>&1 || (echo "Invalid JSON: {}" && exit 1)' \;
+
+.PHONY: check/changelog
+check/changelog: ## Check CHANGELOG.md and the changelog.d entries follow Keep a Changelog.
+	@uv run --no-project python scripts/changelog.py check
+
+.PHONY: changelog
+changelog: ## Print [Unreleased] as the next version will show it, changelog.d entries folded in.
+	@uv run --no-project python scripts/changelog.py render
 
 .DEFAULT_GOAL := help
 .PHONY: help
