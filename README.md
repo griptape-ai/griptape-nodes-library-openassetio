@@ -108,16 +108,20 @@ nodes to Register.
 
 Requires [uv](https://docs.astral.sh/uv/).
 
-Many useful commands are wrapped in a `Makefile` for convenience, but you can also invoke tools
-directly via `uv run` if you prefer. See the [Makefile](Makefile) for tool usage, or run `make`
-with no arguments to see all available targets.
+Use the `Makefile` targets. See the [Makefile](Makefile) for tool usage, or run `make` with no
+arguments to see all available targets.
+
+Dev tooling belongs in `.venv-dev`. A plain `uv sync` or `uv run` would install it into the `.venv`
+the engine builds beside the library JSON, which makes the library load as FLAWED. Invoking tools
+directly needs `UV_PROJECT_ENVIRONMENT=.venv-dev`. See [CONTRIBUTING.md](CONTRIBUTING.md) for why
+and for IDE setup.
 
 ### Quick start
 
 Get set up
 
 ```bash
-make install          # create .venv and install all deps
+make install          # create .venv-dev and install all deps
 make install/hooks    # install pre-commit hooks into .git
 ```
 
