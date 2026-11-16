@@ -11,8 +11,10 @@ ______________________________________________________________________
 ## Development Commands
 
 > **Prefer `make` targets over raw tool invocations.** The exception is targeting a specific file
-> or directory (e.g. `uv run pytest tests/unit/test_session.py`), which is fine. Agent-critical
-> loop:
+> or directory (e.g. `UV_PROJECT_ENVIRONMENT=.venv-dev uv run pytest tests/unit/test_session.py`),
+> which is fine. Always set `UV_PROJECT_ENVIRONMENT=.venv-dev` when calling `uv` directly: without
+> it `uv` installs dev tooling into the engine's `.venv` and the library loads FLAWED (see
+> `CONTRIBUTING.md`). Agent-critical loop:
 
 - After every substantial change: `make check` — fix every issue before continuing.
 - After every code change: `make test/coverage` — do **not** run `pytest` or `slipcover` directly.
